@@ -1,0 +1,31 @@
+﻿services:
+  simplemicroservice:
+    image: simplemicroservice
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+  payment.api:
+    image: payment.api
+    build:
+      context: .
+      dockerfile: Payment.Api/Dockerfile
+
+  payment.application:
+    image: payment.application
+    build:
+      context: .
+      dockerfile: Payment.Application/Dockerfile
+
+  payment.domain:
+    image: payment.domain
+    build:
+      context: .
+      dockerfile: Payment.Domain/Dockerfile
+
+  payment.infrastructure:
+    image: payment.infrastructure
+    build:
+      context: .
+      dockerfile: Payment.Infrastructure/Dockerfile
+
