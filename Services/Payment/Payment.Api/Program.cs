@@ -4,7 +4,8 @@ using Payment.Api.Contracts;
 using Payment.Api.Middlewares;
 using Payment.Application;
 using Payment.Infrastructure;
-
+using Payment.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,5 +37,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PaymentContext>();
+    db.Database.Migrate();
+}
 
 app.Run();

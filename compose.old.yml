@@ -9,9 +9,9 @@ services:
     container_name: postgres
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 12345
-      POSTGRES_DB: payments_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456Aa@
+      POSTGRES_DB: paymentdb
     ports:
       - "5432:5432"
     volumes:
@@ -36,7 +36,7 @@ services:
   # ===========================
   payment-service:
     build:
-      context: ./PaymentService
+      context: ./Services/Payment
       dockerfile: Dockerfile
     container_name: payment-service
     depends_on:
@@ -44,7 +44,7 @@ services:
       - rabbitmq
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Host=postgres;Database=payments_db;Username=postgres;Password=12345"
+      ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=paymentdb;Username=admin;Password=123456Aa@"
       RabbitMQ__HostName: rabbitmq
       RabbitMQ__UserName: guest
       RabbitMQ__Password: guest
@@ -56,7 +56,7 @@ services:
   # ===========================
   gateway-service:
     build:
-      context: ./GatewayService
+      context: ./Services/Gateway
       dockerfile: Dockerfile
     container_name: gateway-service
     depends_on:
@@ -72,7 +72,7 @@ services:
   # ===========================
   notification-service:
     build:
-      context: ./NotificationService
+      context: ./Services/Notification
       dockerfile: Dockerfile
     container_name: notification-service
     depends_on:

@@ -1,0 +1,76 @@
+﻿version: '3.9'
+
+services:
+  payment.api:
+    image: payment.api
+    build:
+      context: .
+      dockerfile: Services/Payment/Payment.Api/Dockerfile
+    container_name: payment.api
+    depends_on:
+      - postgres
+      - rabbitmq
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__PaymentConnectionString: "Host=postgres;Port=5432;Database=paymentdb;Username=admin;Password=123456Aa@"
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__User: guest
+      RabbitMQ__Pass: guest
+    ports:
+      - "5001:8080"
+
+  gateway.api:
+    image: gateway.api
+    build:
+      context: .
+      dockerfile: Services/Gateway/Gateway.Api/Dockerfile
+    container_name: gateway.api
+    depends_on:
+      - payment.api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      PaymentService__BaseUrl: http://payment.api:8080
+    ports:
+      - "5002:8080"
+
+  notification.api:
+    image: notification.api
+    build:
+      context: .
+      dockerfile: Services/Notification/Notification.Api/Dockerfile
+    container_name: notification.api
+    depends_on:
+      - rabbitmq
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__User: guest
+      RabbitMQ__Pass: guest
+    ports:
+      - "5003:8080"
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456Aa@
+      POSTGRES_DB: paymentdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+volumes:
+  pgdata:
