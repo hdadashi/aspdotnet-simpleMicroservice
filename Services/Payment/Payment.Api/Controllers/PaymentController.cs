@@ -2,14 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Payment.Api.Contracts;
 using Payment.Application.EventBus;
-using Payment.Application.Features.Interfaces;
 using Payment.Domain.Enums;
+using Payment.Domain.Interfaces;
 
 namespace Payment.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PaymentController(ITransactionService txService, IMessagePublisher publisher, IConfiguration cfg)
+public class PaymentController(ITransactionRepository txRepository, IMessagePublisher publisher, IConfiguration cfg)
     : ControllerBase
 {
     [HttpPost("get-token")]
@@ -29,7 +29,7 @@ public class PaymentController(ITransactionService txService, IMessagePublisher 
             UpdatedAt = DateTime.UtcNow
         };
 
-        await txService.CreateAsync(tx);
+        await txRepository.CreateAsync(tx);
 
         var gatewayUrl = $"{cfg["GatewayBaseUrl"] ?? "https://localhost:5002"}/api/gateway/pay/{token}";
 
@@ -45,19 +45,19 @@ public class PaymentController(ITransactionService txService, IMessagePublisher 
     [HttpPost("verify")]
     public async Task<IActionResult> Verify([FromBody] VerifyRequest req)
     {
-        var tx = await txService.GetByTokenAsync(req.Token);
+        var tx = await txRepository.GetByTokenAsync(req.Token);
         if (tx == null) return BadRequest(new { isSuccess = false, message = "توکن نامعتبر است" });
 
         // expire check: older than 2 minutes => Expired
         if (tx.Status == PaymentStatus.Pending && tx.CreatedAt.AddMinutes(2) < DateTime.UtcNow)
         {
-            await txService.UpdateStatusAsync(tx, PaymentStatus.Expired, rrn: null, appCode: req.AppCode);
+            await txRepository.UpdateStatusAsync(tx, PaymentStatus.Expired, rrn: null, appCode: req.AppCode);
             return Ok(new { isSuccess = false, status = "Expired", amount = tx.Amount, reservationNumber = tx.ReservationNumber, message = "زمان پرداخت منقضی شده است" });
         }
 
         // store appCode
         tx.AppCode = req.AppCode;
-        await txService.UpdateStatusAsync(tx, tx.Status, rrn: tx.RRN, appCode: req.AppCode); // just update appcode
+        await txRepository.UpdateStatusAsync(tx, tx.Status, rrn: tx.RRN, appCode: req.AppCode); // just update appcode
 
         return tx.Status switch
         {
@@ -94,11 +94,11 @@ public class PaymentController(ITransactionService txService, IMessagePublisher 
     [HttpPost("update-status")]
     public async Task<IActionResult> UpdateStatus([FromBody] UpdateStatusRequest req)
     {
-        var tx = await txService.GetByTokenAsync(req.Token);
+        var tx = await txRepository.GetByTokenAsync(req.Token);
         if (tx == null) return BadRequest(new { isSuccess = false, message = "توکن نامعتبر است" });
 
         var newStatus = req.IsSuccess ? PaymentStatus.Success : PaymentStatus.Failed;
-        await txService.UpdateStatusAsync(tx, newStatus, req.Rrn);
+        await txRepository.UpdateStatusAsync(tx, newStatus, req.Rrn);
 
         // publish event
         var ev = new PaymentProcessedEvent {

@@ -1,15 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Payment.Application.Features.Interfaces;
-using Payment.Infrastructure.Jobs;
+using Payment.Application.Jobs;
+using Payment.Domain.Interfaces;
 using Payment.Infrastructure.Persistence;
-using Payment.Infrastructure.Services;
+using Payment.Infrastructure.Repository;
 using Quartz;
 
 namespace Payment.Infrastructure
 {
-    public static class InfrastructureServiceRegistration
+    public static class InfrastructureRepositoryRegistration
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
@@ -27,7 +27,7 @@ namespace Payment.Infrastructure
                     .WithSimpleSchedule(x => x.WithIntervalInSeconds(30).RepeatForever()));
             });
             services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
-            services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped<ITransactionRepository, TransactionRepository>();
 
             return services;
         }

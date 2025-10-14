@@ -1,9 +1,9 @@
 ﻿using Payment.Domain.Entities;
 using Payment.Domain.Enums;
 
-namespace Payment.Application.Features.Interfaces;
+namespace Payment.Domain.Interfaces;
 
-public interface ITransactionService
+public interface ITransactionRepository
 {
     Task<Transaction> CreateAsync(Transaction tx);
     Task<Transaction?> GetByTokenAsync(string token);
