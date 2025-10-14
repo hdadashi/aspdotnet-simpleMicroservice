@@ -2,7 +2,7 @@
 
 namespace Payment.Api.Contracts;
 
-public abstract class GetTokenRequest
+public class GetTokenRequest
 {
     public string TerminalNo { get; set; } = null!;
     public decimal Amount { get; set; }
@@ -11,9 +11,9 @@ public abstract class GetTokenRequest
     public string PhoneNumber { get; set; } = null!;
 }
 
-public abstract class GetTokenRequestValidator : AbstractValidator<GetTokenRequest>
+public class GetTokenRequestValidator : AbstractValidator<GetTokenRequest>
 {
-    protected GetTokenRequestValidator()
+    public  GetTokenRequestValidator()
     {
         RuleFor(x => x.TerminalNo).NotEmpty();
         RuleFor(x => x.Amount).GreaterThan(0);
