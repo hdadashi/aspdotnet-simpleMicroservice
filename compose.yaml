@@ -1,55 +1,89 @@
-﻿services:
-  simplemicroservice:
-    image: simplemicroservice
+﻿version: '3.9'
+
+services:
+  # ===========================
+  # 🐘 PostgreSQL Database
+  # ===========================
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: payments_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # ===========================
+  # 🐇 RabbitMQ
+  # ===========================
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  # ===========================
+  # 💳 Payment Service
+  # ===========================
+  payment-service:
     build:
-      context: .
+      context: ./PaymentService
       dockerfile: Dockerfile
+    container_name: payment-service
+    depends_on:
+      - postgres
+      - rabbitmq
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=payments_db;Username=postgres;Password=12345"
+      RabbitMQ__HostName: rabbitmq
+      RabbitMQ__UserName: guest
+      RabbitMQ__Password: guest
+    ports:
+      - "5001:8080"
 
-  payment.api:
-    image: payment.api
+  # ===========================
+  # 🌐 Gateway Service
+  # ===========================
+  gateway-service:
     build:
-      context: .
-      dockerfile: Payment.Api/Dockerfile
+      context: ./GatewayService
+      dockerfile: Dockerfile
+    container_name: gateway-service
+    depends_on:
+      - payment-service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      PaymentService__BaseUrl: "http://payment-service:8080"
+    ports:
+      - "5002:8081"
 
-  payment.application:
-    image: payment.application
+  # ===========================
+  # 🔔 Notification Service
+  # ===========================
+  notification-service:
     build:
-      context: .
-      dockerfile: Payment.Application/Dockerfile
+      context: ./NotificationService
+      dockerfile: Dockerfile
+    container_name: notification-service
+    depends_on:
+      - rabbitmq
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      RabbitMQ__HostName: rabbitmq
+      RabbitMQ__UserName: guest
+      RabbitMQ__Password: guest
+    ports:
+      - "5003:8082"
 
-  payment.domain:
-    image: payment.domain
-    build:
-      context: .
-      dockerfile: Payment.Domain/Dockerfile
-
-  payment.infrastructure:
-    image: payment.infrastructure
-    build:
-      context: .
-      dockerfile: Payment.Infrastructure/Dockerfile
-
-  gateway.api:
-    image: gateway.api
-    build:
-      context: .
-      dockerfile: Gateway.Api/Dockerfile
-
-  gateway.application:
-    image: gateway.application
-    build:
-      context: .
-      dockerfile: Gateway.Application/Dockerfile
-
-  gateway.domain:
-    image: gateway.domain
-    build:
-      context: .
-      dockerfile: Gateway.Domain/Dockerfile
-
-  gateway.infrastructure:
-    image: gateway.infrastructure
-    build:
-      context: .
-      dockerfile: Gateway.Infrastructure/Dockerfile
-
+volumes:
+  pgdata:

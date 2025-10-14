@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Payment.Application.EventBus;
 using Payment.Domain.Entities;
 using Payment.Domain.Enums;
 using Payment.Domain.Interfaces;
@@ -6,7 +7,7 @@ using Payment.Infrastructure.Persistence;
 
 namespace Payment.Infrastructure.Repository;
 
-public class TransactionRepository(PaymentContext db) : ITransactionRepository
+public class TransactionRepository(PaymentContext db, IMessagePublisher publisher) : ITransactionRepository
 {
     public async Task<Transaction> CreateAsync(Transaction tx)
     {
