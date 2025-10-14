@@ -86,8 +86,8 @@ docker compose -f docker-compose.override.yml up --build
 
 ### 3️⃣ تست ارتباط سرویس‌ها
 
-1. ابتدا از طریق Payment API یک تراکنش جدید ایجاد کنید (`/api/payment/create`)  
-2. سپس در Gateway API آدرس زیر را صدا بزنید:  
+1. به کمک swagger ابتدا از طریق Payment API یک توکن جدید ایجاد کنید (`/api/payment/get-token`)  
+2. سپس در Gateway API توکن به دست آمده را وارد کنید:  
    `GET /api/gateway/pay/{token}`  
 3. نتیجه پرداخت در RabbitMQ منتشر می‌شود و NotificationService آن را دریافت می‌کند.  
 4. در کنسول `Notification.Api` باید پیام مشابه زیر دیده شود:
