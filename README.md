@@ -21,10 +21,12 @@ Payment.Api
 Payment.Application
 Payment.Domain
 Payment.Infrastructure
+
 Gateway.Api
 Gateway.Application
 Gateway.Domain
 Gateway.Infrastructure
+
 Notification.Api
 Notification.Application
 Notification.Domain
