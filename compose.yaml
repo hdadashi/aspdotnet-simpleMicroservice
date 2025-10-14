@@ -29,3 +29,27 @@
       context: .
       dockerfile: Payment.Infrastructure/Dockerfile
 
+  gateway.api:
+    image: gateway.api
+    build:
+      context: .
+      dockerfile: Gateway.Api/Dockerfile
+
+  gateway.application:
+    image: gateway.application
+    build:
+      context: .
+      dockerfile: Gateway.Application/Dockerfile
+
+  gateway.domain:
+    image: gateway.domain
+    build:
+      context: .
+      dockerfile: Gateway.Domain/Dockerfile
+
+  gateway.infrastructure:
+    image: gateway.infrastructure
+    build:
+      context: .
+      dockerfile: Gateway.Infrastructure/Dockerfile
+
