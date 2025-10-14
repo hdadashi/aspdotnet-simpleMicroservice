@@ -67,8 +67,8 @@ docker run -d --hostname rabbitmq --name rabbitmq -p 5672:5672 -p 15672:15672 ra
 در پوشه‌ی اصلی پروژه، دستور زیر را اجرا کنید:
 
 ```bash
-docker compose down -v
-docker compose up --build
+docker compose -f docker-compose.override.yml down -v
+docker compose -f docker-compose.override.yml up --build
 ```
 
 پس از اجرا، سرویس‌ها در پورت‌های زیر در دسترس هستند:
