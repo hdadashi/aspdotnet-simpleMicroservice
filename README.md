@@ -22,8 +22,13 @@ Payment.Application
 Payment.Domain
 Payment.Infrastructure
 Gateway.Api
+Gateway.Application
+Gateway.Domain
+Gateway.Infrastructure
 Notification.Api
 Notification.Application
+Notification.Domain
+Notification.Infrastructure
 ```
 
 هر سرویس API مستقل اجرا می‌شود و از **Dependency Injection**، **Entity Framework Core (Code-First)**،  
@@ -39,8 +44,8 @@ Notification.Application
 - **RabbitMQ (Event Bus)**
 - **Quartz.NET** برای اجرای jobهای زمان‌بندی‌شده در PaymentService  
 - **Docker Compose** برای استقرار کل سیستم
-- **Swagger / OpenAPI** برای مستندسازی
-- **Serilog / Console Logging** برای مشاهده‌ی رخدادها
+- **Swagger** برای مستندسازی
+- **Console Logging** برای مشاهده‌ی رخدادها
 
 ---
 
