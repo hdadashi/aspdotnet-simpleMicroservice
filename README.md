@@ -21,10 +21,12 @@ Payment.Api
 Payment.Application
 Payment.Domain
 Payment.Infrastructure
+
 Gateway.Api
 Gateway.Application
 Gateway.Domain
 Gateway.Infrastructure
+
 Notification.Api
 Notification.Application
 Notification.Domain
@@ -67,8 +69,8 @@ docker run -d --hostname rabbitmq --name rabbitmq -p 5672:5672 -p 15672:15672 ra
 در پوشه‌ی اصلی پروژه، دستور زیر را اجرا کنید:
 
 ```bash
-docker compose down -v
-docker compose up --build
+docker compose -f docker-compose.override.yml down -v
+docker compose -f docker-compose.override.yml up --build
 ```
 
 پس از اجرا، سرویس‌ها در پورت‌های زیر در دسترس هستند:
@@ -140,6 +142,9 @@ services:
     ports: ["5002:8080"]
   notification.api:
     ports: ["5003:8080"]
+  postgres:
+    image: postgres:15
+    ports: ["5432:5432"]
   rabbitmq:
     image: rabbitmq:3.12-management
     ports: ["5672:5672", "15672:15672"]
