@@ -8,11 +8,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="MediatR" Version="13.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Gateway.Domain\Gateway.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Features\Queries\" />
     </ItemGroup>
 
 </Project>

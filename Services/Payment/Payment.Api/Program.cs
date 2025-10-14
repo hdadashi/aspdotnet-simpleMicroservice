@@ -1,17 +1,18 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Payment.Api.Contracts;
 using Payment.Api.Middlewares;
 using Payment.Application;
 using Payment.Infrastructure;
 using Payment.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Payment.Application.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddOpenApi();
 builder.Services.AddApplicationServices();
+builder.Services.AddApplication();
 
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddFluentValidationAutoValidation();
@@ -38,10 +39,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<PaymentContext>();
-    db.Database.Migrate();
-}
+// using (var scope = app.Services.CreateScope())
+// {
+//     var db = scope.ServiceProvider.GetRequiredService<PaymentContext>();
+//     db.Database.Migrate();
+// }
 
 app.Run();

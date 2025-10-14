@@ -1,17 +1,10 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using Payment.Application.EventBus;
 
-namespace Payment.Application
+namespace Gateway.Application
 {
     public static class ApplicationServiceRegistration
     {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services)
-        {
-            services.AddSingleton<IMessagePublisher, MessagePublisher>();
-
-            return services;
-        }
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
             services.AddMediatR(cfg =>

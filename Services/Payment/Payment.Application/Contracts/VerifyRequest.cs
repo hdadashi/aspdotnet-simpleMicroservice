@@ -1,4 +1,4 @@
-﻿namespace Payment.Api.Contracts;
+﻿namespace Payment.Application.Contracts;
 
 public class VerifyRequest
 {
