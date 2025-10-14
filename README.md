@@ -1,157 +1,148 @@
-# 💳 Simple Microservices Payment System
+# 💳 Simple Microservice Payment System
 
-## 🧭 1. شرح پروژه
+## 🧩 شرح پروژه
 
-این پروژه یک **سیستم ساده‌ی میکروسرویسی پرداخت (Payment System)** است که شامل دو سرویس مستقل است:
+این پروژه یک سامانه‌ی ساده برای **مدیریت تراکنش‌های پرداخت در معماری میکروسرویس** است که شامل سه سرویس اصلی می‌باشد:
 
-- **Payment Service**  
-  مسئول ایجاد تراکنش، صدور توکن، اعتبارسنجی، بروزرسانی وضعیت پرداخت و انتشار پیام‌ها در RabbitMQ است.
+1. **Payment Service** – مدیریت تراکنش‌ها، ذخیره‌سازی در پایگاه داده PostgreSQL و انتشار رویدادها در RabbitMQ  
+2. **Gateway Service** – شبیه‌سازی فرایند پرداخت، اعتبارسنجی توکن و ارسال نتیجه به Payment Service  
+3. **Notification Service** – دریافت رویدادهای پرداخت (PaymentProcessedEvent) از RabbitMQ و ثبت یا نمایش اعلان‌ها
 
-- **Gateway Service**  
-  نقش "درگاه پرداخت" را بازی می‌کند. توکن پرداخت را از Payment دریافت کرده، عملیات پرداخت را شبیه‌سازی می‌کند (با احتمال ۸۰٪ موفق و ۲۰٪ ناموفق)، نتیجه را به PaymentService اطلاع می‌دهد و کاربر را به آدرس merchant هدایت می‌کند.
+ارتباط بین سرویس‌ها به‌صورت **Event-Driven (مبتنی بر پیام)** از طریق RabbitMQ انجام می‌شود.
 
 ---
 
-### 🏗️ معماری کلی
+## ⚙️ معماری استفاده‌شده
 
-پروژه بر اساس **معماری میکروسرویس + DDD (Domain Driven Design)** طراحی شده و هر سرویس دارای ۴ لایه‌ی مستقل است:
+معماری مبتنی بر **DDD (Domain-Driven Design)** و **Microservices** با تفکیک به لایه‌های زیر است:
 
 ```
-ServiceName/
-├── Api              → Web layer (Controllers, Middlewares)
-├── Application      → Business logic, Services, Jobs
-├── Domain           → Entities, Enums, ValueObjects
-└── Infrastructure   → Database, Messaging, Persistence
+Payment.Api
+Payment.Application
+Payment.Domain
+Payment.Infrastructure
+Gateway.Api
+Notification.Api
+Notification.Application
 ```
 
----
-
-### ⚙️ تکنولوژی‌های استفاده‌شده
-
-| لایه | ابزار / تکنولوژی |
-|------|------------------|
-| Backend Framework | **.NET 9 (ASP.NET Core Web API)** |
-| ORM | **Entity Framework Core (Code First)** |
-| Database | **PostgreSQL** |
-| Messaging | **RabbitMQ** |
-| Scheduler | **Quartz.NET** (برای expire کردن تراکنش‌های pending هر ۳۰ ثانیه) |
-| Validation | **FluentValidation** |
-| Documentation | **Swagger (Swashbuckle)** |
-| Design Pattern | **Repository + Service + DI (Dependency Injection)** |
-| Architecture | **DDD + Clean Architecture + Microservices** |
+هر سرویس API مستقل اجرا می‌شود و از **Dependency Injection**، **Entity Framework Core (Code-First)**،  
+و **RabbitMQ** برای برقراری ارتباط بین سرویس‌ها استفاده می‌کند.
 
 ---
 
-## ⚡ 2. نحوه راه‌اندازی و Migration
+## 🧰 تکنولوژی‌های استفاده‌شده
 
-### 🐇 راه‌اندازی RabbitMQ
-اگر Docker نصب داری، کافیست RabbitMQ را با این دستور بالا بیاوری:
+- **.NET 9 (ASP.NET Core Web API)**
+- **PostgreSQL**
+- **Entity Framework Core (Code First)**
+- **RabbitMQ (Event Bus)**
+- **Quartz.NET** برای اجرای jobهای زمان‌بندی‌شده در PaymentService  
+- **Docker Compose** برای استقرار کل سیستم
+- **Swagger / OpenAPI** برای مستندسازی
+- **Serilog / Console Logging** برای مشاهده‌ی رخدادها
+
+---
+
+## 🚀 نحوه راه‌اندازی
+
+### 1️⃣ راه‌اندازی RabbitMQ (لوکال)
+اگر Docker نصب دارید:
+```bash
+docker run -d --hostname rabbitmq --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.12-management
+```
+سپس در مرورگر باز کنید:  
+👉 [http://localhost:15672](http://localhost:15672)  
+نام کاربری و رمز عبور: `guest / guest`
+
+---
+
+### 2️⃣ اجرای پروژه‌ها با Docker Compose
+
+در پوشه‌ی اصلی پروژه، دستور زیر را اجرا کنید:
 
 ```bash
-docker run -d --hostname rabbitmq-host --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+docker compose down -v
+docker compose up --build
 ```
 
-- Dashboard: [http://localhost:15672](http://localhost:15672)  
-- Username: `guest`  
-- Password: `guest`
+پس از اجرا، سرویس‌ها در پورت‌های زیر در دسترس هستند:
+
+| سرویس | آدرس |
+|--------|--------|
+| Gateway | https://localhost:5002/swagger |
+| Payment | https://localhost:5001/swagger |
+| Notification | https://localhost:5003/swagger |
+| RabbitMQ UI | http://localhost:15672 |
 
 ---
 
-### 🗄️ راه‌اندازی PostgreSQL (اختیاری در Docker)
+### 3️⃣ تست ارتباط سرویس‌ها
 
-```bash
-docker run --name postgres -e POSTGRES_PASSWORD=12345 -p 5432:5432 -d postgres
+1. ابتدا از طریق Payment API یک تراکنش جدید ایجاد کنید (`/api/payment/create`)  
+2. سپس در Gateway API آدرس زیر را صدا بزنید:  
+   `GET /api/gateway/pay/{token}`  
+3. نتیجه پرداخت در RabbitMQ منتشر می‌شود و NotificationService آن را دریافت می‌کند.  
+4. در کنسول `Notification.Api` باید پیام مشابه زیر دیده شود:
+
+```
+📩 PaymentProcessedEvent received!
+Token: ...
+Amount: 250000
+Status: Success
 ```
 
 ---
 
-### 🧩 اجرای Migration (برای PaymentService)
+## 🧠 تصمیمات طراحی
 
-در مسیر `PaymentService/Payment.Infrastructure` یا ریشه‌ی سرویس:
-```bash
-dotnet ef database update --project Payment.Infrastructure --startup-project Payment.Api
+- استفاده از **RabbitMQ Fanout Exchange** برای جداسازی Publisher و Subscriberها.  
+- نگه‌داشتن ساختار **لایه‌ای و DDD** برای افزایش قابلیت نگهداری و تست‌پذیری.  
+- استفاده از **Quartz.NET** جهت زمان‌بندی عملیات Expire در PaymentService.  
+- تمام سرویس‌ها قابلیت اجرا به صورت مستقل یا در Docker Compose را دارند.  
+
+---
+
+## ⚔️ چالش‌های پیاده‌سازی
+
+- مدیریت ارتباطات بین سرویس‌ها در محیط لوکال (localhost vs rabbitmq در Docker)
+- هماهنگی بین ساختار Exchange و Queue در RabbitMQ
+- مدیریت خطاها و rollback در تراکنش‌ها
+- اطمینان از اجرای هم‌زمان Quartz jobs و رویدادهای RabbitMQ
+
+---
+
+## 💡 پیشنهادات بهبود
+
+- **افزودن Health Checks و Web UI:**  
+  با استفاده از پکیج `AspNetCore.Diagnostics.HealthChecks` می‌توان وضعیت سلامت هر سرویس و وابستگی‌های آن (RabbitMQ، PostgreSQL، HTTP Dependencies) را پایش کرد و یک صفحه‌ی وب برای نمایش وضعیت کلی سیستم ساخت.
+
+- **افزودن لایه‌ی Logging مرکزی** با استفاده از Elastic Stack یا Seq برای مشاهده‌ی متمرکز لاگ‌ها.
+
+- **استفاده از MassTransit یا CAP Framework** برای مدیریت Event Bus در پروژه‌های بزرگ‌تر.
+
+- **افزودن JWT Authentication** در Gateway برای امنیت بیشتر APIها.
+
+---
+
+## 📦 ساختار پروژه در Docker Compose
+
+```yaml
+services:
+  payment.api:
+    ports: ["5001:8080"]
+  gateway.api:
+    ports: ["5002:8080"]
+  notification.api:
+    ports: ["5003:8080"]
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports: ["5672:5672", "15672:15672"]
 ```
 
 ---
 
-### ▶️ اجرای سرویس‌ها
+## 🏁 نتیجه
 
-#### 1️⃣ PaymentService
-```bash
-cd PaymentService/Payment.Api
-dotnet run
-```
-
-پیش‌فرض پورت: `https://localhost:5001`
-
-#### 2️⃣ GatewayService
-```bash
-cd GatewayService/Gateway.Api
-dotnet run
-```
-
-پیش‌فرض پورت: `https://localhost:5002`
-
----
-
-### 🔍 تست سریع
-
-1. در Postman بزن:
-   ```
-   POST https://localhost:5001/api/payment/get-token
-   ```
-   خروجی شامل `token` و `gatewayUrl` است.
-
-2. با آدرس برگشتی `gatewayUrl` برو:
-   ```
-   GET https://localhost:5002/api/gateway/pay/{token}
-   ```
-   پرداخت با احتمال ۸۰٪ موفقیت شبیه‌سازی می‌شود.
-
-3. Gateway نتیجه را به `/api/payment/update-status` می‌فرستد و PaymentService پیام `PaymentProcessedEvent` را در RabbitMQ منتشر می‌کند.
-
----
-
-## 🧱 3. معماری و تصمیمات طراحی
-
-### 💡 چرا از این ساختار استفاده شد؟
-
-- **میکروسرویس‌ها**: جداسازی منطق و استقلال توسعه/استقرار هر بخش (Payment, Gateway, Notification و …)  
-- **DDD + Clean Architecture**: جداسازی دقیق لایه‌ها (Domain از Application و Infrastructure مستقل است).  
-- **CQRS-ready design**: ساختار آماده برای افزودن Query/Command با MediatR.  
-- **RabbitMQ**: برای decouple شدن سرویس‌ها و انتقال پیام بین آن‌ها.  
-- **Quartz.NET**: برای زمان‌بندی وظایف background بدون وابستگی به cron یا task scheduler خارجی.
-
----
-
-### ⚙️ چالش‌های پیاده‌سازی
-
-- هماهنگی بین سرویس‌ها در زمان تست (به‌خصوص با HTTPS و HttpClient)
-- مدیریت خطاها و timeout در ارتباط Gateway → Payment
-- اعتبارسنجی توکن‌ها و انقضا با job زمان‌بندی‌شده
-- پیکربندی درست DI بین پروژه‌های جدا در یک Solution
-- اطمینان از idempotent بودن عملیات update-status
-
----
-
-### 🚀 اگر زمان بیشتری داشتم...
-
-1. افزودن **SeriLog** برای لاگ کردن اتفاقات درون سیستمی 
-2. افزودن **Authentication / JWT** برای ایمن کردن endpointها  
-3. نوشتن **Integration Tests** بین Gateway و Payment  
-4. افزودن **Polly** برای Retry / Circuit Breaker در HttpClient  
-5. مستندسازی OpenAPI بهتر با نمونه درخواست‌ها و پاسخ‌ها  
-6. افزودن **HealthCheck** و صفحه‌ی وضعیت (Web Health Check UI) برای پایش سلامت میکروسرویس‌ها و ارتباط آن‌ها با RabbitMQ و دیتابیس
-
----
-
-### ✨ جمعبندی
-
-این پروژه نمونه‌ای ساده ولی استاندارد از پیاده‌سازی معماری **Microservice + DDD** با .NET است  
-که پایه‌ای عالی برای ساخت سیستم‌های پرداخت یا تراکنش‌های مستقل در مقیاس بزرگ‌تر محسوب می‌شود.
-
----
-
-📬 **نویسنده:** Hossein  
-📅 **تاریخ:** 2025-10  
-🧱 **نسخه:** v1.0.0
+این پروژه نمونه‌ای از معماری **Microservices + DDD + Event-Driven** است  
+که ارتباط سرویس‌ها از طریق RabbitMQ انجام می‌شود و به سادگی می‌توان سرویس‌های جدید مانند **Notification، Reporting، یا Analytics** را به آن افزود.
