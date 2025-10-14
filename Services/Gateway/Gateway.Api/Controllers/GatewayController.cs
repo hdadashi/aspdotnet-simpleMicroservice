@@ -8,29 +8,77 @@ namespace Gateway.Api.Controllers
     [Route("api/[controller]")]
     public class GatewayController(IPaymentClient paymentClient) : ControllerBase
     {
+        private readonly Random _random = new();
+
         // simulate payment page
         [HttpGet("pay/{token}")]
-        public Task<IActionResult> Pay(string token)
+        public async Task<IActionResult> Pay(string token)
         {
-            // Normally user sees bank page — I tried to simulate it:
-            return Task.FromResult<IActionResult>(Ok(new
+            var verifyResult = await paymentClient.VerifyPaymentTokenAsync(token);
+            if (verifyResult is { IsSuccess: true })
             {
-                message = "Simulated payment page",
+                return BadRequest(new
+                {
+                    isSuccess = false,
+                    token,
+                    message = "توکن نامعتبر است یا منقضی شده است."
+                });
+            }
+
+            var isSuccess = _random.Next(1, 101) <= 80;
+
+            string? rrn = null;
+            if (isSuccess)
+            {
+                rrn = string.Concat(Enumerable.Range(0, 12).Select(_ => _random.Next(0, 10).ToString()));
+            }
+
+            await paymentClient.UpdatePaymentStatusAsync(token, isSuccess, rrn);
+
+            var message = isSuccess ? "پرداخت با موفقیت انجام شد" : "پرداخت ناموفق بود";
+
+            var response = new
+            {
+                isSuccess,
                 token,
-                info = "Use POST /api/gateway/callback to simulate payment result"
-            }));
+                rrn,
+                amount = verifyResult.Amount,
+                message,
+                redirectUrl = verifyResult.RedirectUrl
+            };
+
+            return Ok(response);
         }
 
         [HttpPost("callback")]
         public async Task<IActionResult> Callback([FromBody] PaymentResultDto result)
         {
-            var updateResult = await paymentClient.UpdatePaymentStatusAsync(result);
-
-            return Ok(new
+            var verify = await paymentClient.VerifyPaymentTokenAsync(result.Token);
+            if (verify is not { IsSuccess: true })
             {
-                isSuccess = updateResult.IsSuccess,
-                message = updateResult.Message
-            });
+                return Ok(new
+                {
+                    isSuccess = false,
+                    token = result.Token,
+                    message = "توکن نامعتبر یا منقضی شده است."
+                });
+            }
+
+            var updateOk = await paymentClient.UpdatePaymentStatusAsync(result.Token, result.IsSuccess, result.Rrn);
+
+            var message = result.IsSuccess ? "پرداخت با موفقیت انجام شد" : "پرداخت ناموفق بود";
+
+            var response = new
+            {
+                isSuccess = result.IsSuccess && updateOk,
+                token = result.Token,
+                rrn = result.Rrn,
+                amount = verify.Amount,
+                message,
+                redirectUrl = verify.RedirectUrl
+            };
+
+            return Ok(response);
         }
     }
 }

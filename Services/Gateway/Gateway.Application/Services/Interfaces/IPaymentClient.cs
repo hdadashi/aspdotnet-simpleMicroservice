@@ -4,6 +4,8 @@ namespace Gateway.Application.Services.Interfaces
 {
     public interface IPaymentClient
     {
-        Task<PaymentUpdateResponseDto> UpdatePaymentStatusAsync(PaymentResultDto result);
+        Task<PaymentVerifyResponseDto?> VerifyPaymentTokenAsync(string token);
+        Task<bool> UpdatePaymentStatusAsync(string token, bool isSuccess, string? rrn);
+
     }
 }
