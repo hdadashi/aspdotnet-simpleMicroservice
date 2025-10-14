@@ -140,6 +140,9 @@ services:
     ports: ["5002:8080"]
   notification.api:
     ports: ["5003:8080"]
+  postgres:
+    image: postgres:15
+    ports: ["5432:5432"]
   rabbitmq:
     image: rabbitmq:3.12-management
     ports: ["5672:5672", "15672:15672"]
