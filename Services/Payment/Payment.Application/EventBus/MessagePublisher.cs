@@ -36,9 +36,9 @@ namespace Payment.Application.EventBus
             var json = JsonSerializer.Serialize(ev);
             var body = Encoding.UTF8.GetBytes(json);
 
-            // Fanout = همه subscriberها دریافت می‌کنند
+            // Fanout = all subscribers receive
             _channel.BasicPublish(exchange: _exchange, routingKey: "", basicProperties: null, body: body);
-            _logger.LogInformation("📤 Published PaymentProcessedEvent → {Exchange}", _exchange);
+            _logger.LogInformation("Published PaymentProcessedEvent → {Exchange}", _exchange);
         }
 
         public void Dispose()
