@@ -144,11 +144,11 @@ psql -U admin -d paymentdb
 ```yaml
 services:
   payment.api:
-    ports: ["5001:8080"]
+    ports: ["5001:5001"]
   gateway.api:
-    ports: ["5002:8080"]
+    ports: ["5002:5002"]
   notification.api:
-    ports: ["5003:8080"]
+    ports: ["5003:5003"]
   postgres:
     image: postgres:15
     ports: ["5432:5432"]
