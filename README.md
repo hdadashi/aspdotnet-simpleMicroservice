@@ -99,14 +99,13 @@ Amount: 250000
 Status: Success
 ```
 
----
 5. برای مشاهده رکوردهای جدول Transaction در cmd مراحل زیر را طی کنید:
 ```bash
 docker exec -it postgres bash
 psql -U admin -d paymentdb
 ```
 سپس دستور SELECT * FROM "Transactions"; را وارد کنید.
-
+---
 ## 🧠 تصمیمات طراحی
 
 - استفاده از **RabbitMQ Fanout Exchange** برای جداسازی Publisher و Subscriberها.  
