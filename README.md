@@ -105,7 +105,9 @@ docker exec -it postgres bash
 psql -U admin -d paymentdb
 ```
 سپس دستور SELECT * FROM "Transactions"; را وارد کنید.
+
 ---
+
 ## 🧠 تصمیمات طراحی
 
 - استفاده از **RabbitMQ Fanout Exchange** برای جداسازی Publisher و Subscriberها.  
