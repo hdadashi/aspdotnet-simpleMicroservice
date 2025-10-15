@@ -77,9 +77,9 @@ docker compose -f docker-compose.override.yml up --build
 
 | سرویس | آدرس |
 |--------|--------|
-| Gateway | https://localhost:5002/swagger |
-| Payment | https://localhost:5001/swagger |
-| Notification | https://localhost:5003/swagger |
+| Gateway | http://localhost:5002/swagger/index.html |
+| Payment | http://localhost:5001/swagger/index.html |
+| Notification | http://localhost:5003/swagger/index.html |
 | RabbitMQ UI | http://localhost:15672 |
 
 ---
