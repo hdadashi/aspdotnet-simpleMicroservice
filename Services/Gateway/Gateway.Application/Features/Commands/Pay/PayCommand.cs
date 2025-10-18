@@ -2,4 +2,4 @@
 
 namespace Gateway.Application.Features.Commands.Pay;
 
-public record PayCommand(string Token) : IRequest<object>;
+public record PayCommand(string Token) : IRequest<PayResponseDto>;

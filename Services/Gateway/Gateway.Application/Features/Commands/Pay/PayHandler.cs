@@ -3,22 +3,22 @@ using MediatR;
 
 namespace Gateway.Application.Features.Commands.Pay;
 
-public class PayHandler(IPaymentClient paymentClient) : IRequestHandler<PayCommand, object>
+public class PayHandler(IPaymentClient paymentClient) : IRequestHandler<PayCommand, PayResponseDto>
 {
     private readonly Random _random = new();
 
-    public async Task<object> Handle(PayCommand command, CancellationToken ct)
+    public async Task<PayResponseDto> Handle(PayCommand command, CancellationToken ct)
     {
         var token = command.Token;
 
         var verifyResult = await paymentClient.VerifyPaymentTokenAsync(token);
         if (verifyResult is { IsSuccess: true })
         {
-            return new
+            return new PayResponseDto
             {
-                isSuccess = false,
-                token,
-                message = "توکن نامعتبر است یا منقضی شده است."
+                IsSuccess = false,
+                Token = token,
+                Message = "توکن نامعتبر است یا منقضی شده است."
             };
         }
 
@@ -34,14 +34,14 @@ public class PayHandler(IPaymentClient paymentClient) : IRequestHandler<PayComma
 
         var message = isSuccess ? "پرداخت با موفقیت انجام شد" : "پرداخت ناموفق بود";
 
-        return new
+        return new PayResponseDto
         {
-            isSuccess,
-            token,
-            rrn,
-            amount = verifyResult.Amount,
-            message,
-            redirectUrl = verifyResult.RedirectUrl
+            IsSuccess =  isSuccess,
+            Token = token,
+            Rrn = rrn,
+            Amount = verifyResult.Amount,
+            Message = message,
+            RedirectUrl = verifyResult.RedirectUrl
         };
     }
 }

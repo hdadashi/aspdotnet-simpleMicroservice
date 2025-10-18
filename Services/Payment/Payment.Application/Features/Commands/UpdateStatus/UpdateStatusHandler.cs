@@ -8,15 +8,15 @@ namespace Payment.Application.Features.Commands.UpdateStatus;
 public class UpdateStatusHandler(
     ITransactionRepository txRepository,
     IMessagePublisher publisher)
-    : IRequestHandler<UpdateStatusCommand, object>
+    : IRequestHandler<UpdateStatusCommand, UpdateStatusResponseDto>
 {
-    public async Task<object> Handle(UpdateStatusCommand command, CancellationToken ct)
+    public async Task<UpdateStatusResponseDto> Handle(UpdateStatusCommand command, CancellationToken ct)
     {
         var req = command.Request;
 
         var tx = await txRepository.GetByTokenAsync(req.Token);
         if (tx == null)
-            return new { isSuccess = false, message = "توکن نامعتبر است" };
+            return new UpdateStatusResponseDto{ IsSuccess = false, Message = "توکن نامعتبر است" };
 
         var newStatus = req.IsSuccess ? PaymentStatus.Success : PaymentStatus.Failed;
 
@@ -34,14 +34,14 @@ public class UpdateStatusHandler(
 
         publisher.PublishPaymentProcessed(ev);
 
-        return new
+        return new UpdateStatusResponseDto
         {
-            isSuccess = true,
-            message = "وضعیت با موفقیت بروزرسانی شد",
-            status = newStatus.ToString(),
-            rrn = tx.RRN,
-            reservationNumber = tx.ReservationNumber,
-            amount = tx.Amount
+            IsSuccess = true,
+            Message = "وضعیت با موفقیت بروزرسانی شد",
+            Status = newStatus.ToString(),
+            Rrn = tx.RRN,
+            ReservationNumber = tx.ReservationNumber,
+            Amount = tx.Amount
         };
     }
 }

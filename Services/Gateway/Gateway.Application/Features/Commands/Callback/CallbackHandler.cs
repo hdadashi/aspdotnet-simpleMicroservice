@@ -3,20 +3,20 @@ using MediatR;
 
 namespace Gateway.Application.Features.Commands.Callback;
 
-public class CallbackHandler(IPaymentClient paymentClient) : IRequestHandler<CallbackCommand, object>
+public class CallbackHandler(IPaymentClient paymentClient) : IRequestHandler<CallbackCommand, CallbackResponseDto>
 {
-    public async Task<object> Handle(CallbackCommand command, CancellationToken ct)
+    public async Task<CallbackResponseDto> Handle(CallbackCommand command, CancellationToken ct)
     {
         var result = command.Result;
 
         var verify = await paymentClient.VerifyPaymentTokenAsync(result.Token);
         if (verify is not { IsSuccess: true })
         {
-            return new
+            return new CallbackResponseDto
             {
-                isSuccess = false,
-                token = result.Token,
-                message = "توکن نامعتبر یا منقضی شده است."
+                IsSuccess = false,
+                Token = result.Token,
+                Message = "توکن نامعتبر یا منقضی شده است."
             };
         }
 
@@ -24,14 +24,14 @@ public class CallbackHandler(IPaymentClient paymentClient) : IRequestHandler<Cal
 
         var message = result.IsSuccess ? "پرداخت با موفقیت انجام شد" : "پرداخت ناموفق بود";
 
-        return new
+        return new CallbackResponseDto
         {
-            isSuccess = result.IsSuccess && updateOk,
-            token = result.Token,
-            rrn = result.Rrn,
-            amount = verify.Amount,
-            message,
-            redirectUrl = verify.RedirectUrl
+            IsSuccess = result.IsSuccess && updateOk,
+            Token = result.Token,
+            Rrn = result.Rrn,
+            Amount = verify.Amount,
+            Message = message,
+            RedirectUrl = verify.RedirectUrl
         };
     }
 }

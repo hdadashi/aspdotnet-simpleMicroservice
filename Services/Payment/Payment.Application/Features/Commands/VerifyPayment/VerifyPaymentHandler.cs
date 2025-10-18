@@ -5,20 +5,20 @@ using Payment.Domain.Interfaces;
 namespace Payment.Application.Features.Commands.VerifyPayment;
 
 public class VerifyPaymentHandler(ITransactionRepository txRepository)
-    : IRequestHandler<VerifyPaymentCommand, object>
+    : IRequestHandler<VerifyPaymentCommand, VerifyPaymentResponseDto>
 {
-    public async Task<object> Handle(VerifyPaymentCommand command, CancellationToken ct)
+    public async Task<VerifyPaymentResponseDto> Handle(VerifyPaymentCommand command, CancellationToken ct)
     {
         var req = command.Request;
         var tx = await txRepository.GetByTokenAsync(req.Token);
         if (tx == null)
-            return new { isSuccess = false, message = "توکن نامعتبر است" };
+            return new VerifyPaymentResponseDto{ IsSuccess = false, Message = "توکن نامعتبر است" };
 
         // Expiration check
         if (tx.Status == PaymentStatus.Pending && tx.CreatedAt.AddMinutes(2) < DateTime.UtcNow)
         {
             await txRepository.UpdateStatusAsync(tx, PaymentStatus.Expired, null, req.AppCode);
-            return new { isSuccess = false, status = "Expired", amount = tx.Amount, reservationNumber = tx.ReservationNumber, message = "زمان پرداخت منقضی شده است" };
+            return new VerifyPaymentResponseDto{ IsSuccess = false, Status = "Expired", Amount = tx.Amount, ReservationNumber = tx.ReservationNumber, Message = "زمان پرداخت منقضی شده است" };
         }
 
         tx.AppCode = req.AppCode;
@@ -26,9 +26,9 @@ public class VerifyPaymentHandler(ITransactionRepository txRepository)
 
         return tx.Status switch
         {
-            PaymentStatus.Success => new { isSuccess = true, status = "Success", amount = tx.Amount, rrn = tx.RRN, reservationNumber = tx.ReservationNumber, message = "پرداخت با موفقیت تایید شد" },
-            PaymentStatus.Failed => new { isSuccess = false, status = "Failed", amount = tx.Amount, reservationNumber = tx.ReservationNumber, message = "پرداخت ناموفق بود" },
-            _ => new { isSuccess = false, status = "Pending", amount = tx.Amount, reservationNumber = tx.ReservationNumber, message = "پرداخت هنوز انجام نشده است" }
+            PaymentStatus.Success => new VerifyPaymentResponseDto{ IsSuccess = true, Status = "Success", Amount = tx.Amount, Rrn = tx.RRN, ReservationNumber = tx.ReservationNumber, Message = "پرداخت با موفقیت تایید شد" },
+            PaymentStatus.Failed => new VerifyPaymentResponseDto{ IsSuccess = false, Status = "Failed", Amount = tx.Amount, ReservationNumber = tx.ReservationNumber, Message = "پرداخت ناموفق بود" },
+            _ => new VerifyPaymentResponseDto{ IsSuccess = false, Status = "Pending", Amount = tx.Amount, ReservationNumber = tx.ReservationNumber, Message = "پرداخت هنوز انجام نشده است" }
         };
     }
 }
